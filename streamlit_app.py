@@ -2,6 +2,28 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+import base64
+
+def set_bg_from_local(image_file):
+    with open(image_file, "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+    css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpg;base64,{encoded}");
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# 🔥 Call the function to apply it
+set_bg_from_local("agri_bg.jpg")
+
+
 # Load CSV
 df = pd.read_csv("biocontrol_data.csv")
 
