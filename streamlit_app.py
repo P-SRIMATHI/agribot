@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 # Load dataset
 df = pd.read_csv("biocontrol_data.csv")
 
-# ✅ Updated Suggestion Function (flexible pest input)
+# 🧠 Smart pest match
 def suggest_agent(crop, pest):
     pest = pest.lower().strip()
     crop = crop.lower().strip()
 
-    # Match crop exactly & pest as substring
     match = df[df['Crop'].str.lower() == crop]
     match = match[match['Pest'].str.lower().str.contains(pest)]
 
@@ -19,56 +18,57 @@ def suggest_agent(crop, pest):
     else:
         return "No match found", "Try a different crop/pest"
 
-# App UI
-st.set_page_config(page_title="AgriBot - Biocontrol Recommender", layout="centered")
-st.title("🌱 AgriBot – Smart Biocontrol Recommendation System")
+# 🖥️ UI Setup
+st.set_page_config(page_title="AgriBot – Biocontrol Assistant", layout="centered")
+st.title("🌱 AgriBot")
+st.markdown("### 🌾 Organic Biocontrol Recommendation System")
+st.markdown("Built with love for farmers, researchers, and nature 🌍")
 
-st.markdown("""
-Welcome to **AgriBot**!  
-Enter your crop and pest below to get a recommended organic biocontrol agent 🐞🧪  
-You can also view analytics of the most common pests and agents 📊
-""")
+# 🌿 Input Section
+st.markdown("#### 📝 Enter Your Crop & Pest")
+col1, col2 = st.columns(2)
+with col1:
+    crop = st.text_input("Enter Crop (e.g., Maize)")
+with col2:
+    pest = st.text_input("Enter Pest (e.g., Stem Borer)")
 
-# Inputs
-crop = st.text_input("🌿 Enter Crop Name (e.g., Maize):")
-pest = st.text_input("🐛 Enter Pest Name (e.g., Stem Borer):")  
-
-# Suggestion
-if st.button("🔍 Suggest Agent"):
+if st.button("🔍 Suggest Biocontrol Agent"):
     agent, usage = suggest_agent(crop, pest)
-    st.success(f"✅ Biocontrol Agent: {agent}")
-    st.info(f"📌 Usage Instructions: {usage}")
+    if agent != "No match found":
+        st.success(f"✅ Recommended Agent: {agent}")
+        st.info(f"📌 Usage Instructions: {usage}")
+    else:
+        st.warning("❗ No matching result. Please check your input.")
 
-# Visualizations
-st.markdown("---")
-st.subheader("📊 Pest & Biocontrol Analytics")
+st.divider()
 
-if st.checkbox("📌 Show Quick Charts"):
-    st.markdown("**Top Reported Pests:**")
-    st.bar_chart(df['Pest'].value_counts())
+# 📊 Analytics Section
+st.markdown("### 📈 Dataset Insights")
 
-    st.markdown("**Most Recommended Biocontrol Agents:**")
-    st.bar_chart(df['Biocontrol Agent'].value_counts())
+col3, col4 = st.columns(2)
+with col3:
+    if st.checkbox("📌 Show Pest Frequencies (Bar Chart)"):
+        pest_counts = df['Pest'].value_counts()
+        st.bar_chart(pest_counts)
 
-if st.checkbox("🌟 Show Styled Graphs"):
-    # Bar Chart - Pests
-    st.markdown("### 🌾 Pest Frequency (Styled)")
-    pest_counts = df['Pest'].value_counts()
-    fig, ax = plt.subplots()
-    pest_counts.plot(kind='bar', color='seagreen', ax=ax)
-    ax.set_title("Top Pests Reported")
-    ax.set_ylabel("Frequency")
-    ax.set_xlabel("Pests")
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
+with col4:
+    if st.checkbox("🧪 Show Biocontrol Agent Distribution (Pie Chart)"):
+        agent_counts = df['Biocontrol Agent'].value_counts()
+        fig, ax = plt.subplots()
+        agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
+        ax.set_ylabel("")
+        st.pyplot(fig)
 
-    # Pie Chart - Biocontrol Agents
-    st.markdown("### 🧬 Biocontrol Agent Usage (Pie Chart)")
-    agent_counts = df['Biocontrol Agent'].value_counts()
-    fig2, ax2 = plt.subplots()
-    agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax2)
-    ax2.set_ylabel("")
-    st.pyplot(fig2)
+st.divider()
 
-st.markdown("---")
-st.caption("📄 Data source: ICAR-IPM Package for Maize | 💻 Project by Srima 🌾")
+# 📋 Dataset Preview (optional)
+with st.expander("🔍 Preview Biocontrol Dataset"):
+    st.dataframe(df)
+
+# 📌 Footer
+st.markdown("""
+---
+© 2025 AgriBot | Developed by Srima 💚  
+Data Source: ICAR - IPM Package for Maize  
+Version: 1.0 | Powered by Streamlit
+""")
