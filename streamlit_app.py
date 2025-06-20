@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-
-from pathlib import Path
+import speech_recognition as sr
 import base64
 
+# Load Dataset
+df = pd.read_csv("biocontrol_data.csv")
+
+# Background image (optional)
 def set_bg_from_local(image_file):
     with open(image_file, "rb") as img_file:
         encoded = base64.b64encode(img_file.read()).decode()
@@ -20,44 +23,50 @@ def set_bg_from_local(image_file):
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# 🔥 Call the function to apply it
-set_bg_from_local("agri_bg.jpg")
+# Uncomment if you want background
+# set_bg_from_local("agri_bg.jpg")
 
-
-# Load CSV
-df = pd.read_csv("biocontrol_data.csv")
-
-# Agent suggestion function with substring pest match
+# Smart matching function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
-    
     match = df[df['Crop'].str.lower() == crop]
     match = match[match['Pest'].str.lower().str.contains(pest)]
-    
     if not match.empty:
         return match.iloc[0]['Biocontrol Agent'], match.iloc[0]['Usage Method']
     else:
-        return "No match found", "Try a different crop or pest"
+        return "No match found", "Try a different crop or pest."
 
-# Configure page
+# Voice recognizer
+def record_and_recognize():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("🎧 Listening... Speak clearly")
+        audio = r.listen(source, phrase_time_limit=4)
+        try:
+            text = r.recognize_google(audio)
+            st.success(f"✅ You said: `{text}`")
+            return text
+        except sr.UnknownValueError:
+            st.warning("❗ Couldn't understand, try again.")
+        except sr.RequestError:
+            st.error("❌ API error. Check internet.")
+    return ""
+
+# Page config
 st.set_page_config(page_title="AgriBot - Smart Biocontrol", layout="wide")
 
-# 🌟 Header / Welcome Page
+# 🌟 Welcome Header
 st.markdown("""
 # 🌱 Welcome to **AgriBot**
-### Your Smart Organic Biocontrol Recommendation Assistant 🧪🐞
-
-AgriBot helps farmers, researchers, and students find **eco-friendly solutions** for pest control — powered by **real ICAR data**.  
-Enter your crop & pest to get personalized suggestions, and explore insightful analytics that guide sustainable farming 🌾
-
----
+### Your Smart Organic Biocontrol Recommendation Assistant 🐞🧪  
+Speak or type your crop and pest — get an eco-friendly, data-backed solution 💚  
 """)
 
-# 🔄 Main Layout: Two Columns Side-by-Side
+# Main 2-column layout
 left, right = st.columns([1.2, 1])
 
-# 👉 LEFT SIDE: Charts + Dataset
+# 👉 LEFT SIDE: Charts & Data
 with left:
     st.markdown("## 📊 Pest & Biocontrol Analytics")
 
@@ -79,20 +88,33 @@ with left:
 with right:
     st.markdown("## 📝 Get Biocontrol Suggestion")
 
-    crop = st.text_input("🌿 Enter Crop (e.g., Maize)")
-    pest = st.text_input("🐛 Enter Pest (e.g., Stem Borer)")
+    # Text inputs with session state
+    crop = st.text_input("🌿 Enter Crop (e.g., Maize)", key="crop_input")
+    pest = st.text_input("🐛 Enter Pest (e.g., Stem Borer)", key="pest_input")
+
+    st.markdown("### 🎙️ Or Use Voice Input")
+
+    if st.button("🎤 Record for Crop"):
+        text = record_and_recognize()
+        if text:
+            st.session_state.crop_input = text
+
+    if st.button("🎤 Record for Pest"):
+        text = record_and_recognize()
+        if text:
+            st.session_state.pest_input = text
 
     if st.button("🔍 Suggest Biocontrol Agent"):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
-            st.success(f"✅ Recommended Agent: {agent}")
+            st.success(f"✅ Biocontrol Agent: {agent}")
             st.info(f"📌 Usage Instructions: {usage}")
         else:
-            st.warning("❗ No match found. Please try again with a valid crop & pest.")
+            st.warning("❗ No match found. Try different inputs.")
 
 # Footer
 st.markdown("""
 ---
-🔬 Source: [ICAR - Integrated Pest Management Package (Maize)](https://ncipm.icar.gov.in/)  
-🛠️ Developed with ❤️ by **Srima** | Version 1.0 | Powered by **Streamlit**
+🧪 Data: ICAR IPM for Maize | 👩‍🔬 Project by Srima | 🎤 Voice-enabled AgriBot  
+🧠 Powered by Python + Streamlit + SpeechRecognition  
 """)
