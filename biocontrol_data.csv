@@ -1,0 +1,11 @@
+Crop,Pest,Biocontrol Agent,Usage Method
+Maize,Stem Borer (Chilo partellus),Trichogramma chilonis,"Release 160,000 parasitoids per hectare at 7 and 15 days after sowing"
+Maize,Stem Borer (Swinhoe/Sesamia inferens),Cotesia flavipes,"Conserve naturally occurring parasitoids by reducing chemical pesticide use"
+Maize,Stem Borer (Chilo partellus),Cotesia flavipes,"Same as above; larvae-stage control via conservation release"
+Maize,Stem Borer (Helicoverpa armigera),Trichogramma evanescens,"Release X eggs per hectare (as per IPM schedule) during early crop stage"
+Maize,Stem Borer (Helicoverpa armigera),Trichogrammoidea armigera,"Similar parasitoid application for leaf damage control"
+Maize,Stem Borer (Chilo partellus),Xanthopimpla punctata,"Pupal stage control via natural parasitoid release"
+Maize,Stem Borer (Chilo partellus),Tetrastichus ayyari,"Pupal parasitoid release aligned with stem borer lifecycle"
+Maize,Stem Borer (Chilo partellus),Bracon chinensis,"Larval stage biocontrol — release parasitoids at early infestation"
+Maize,Stem Borer (Chilo partellus),Cryptolaemus montrouzieri,"Conserve ladybird beetles for mealy bug control (soil pests)"
+Maize,Stem Borer (Chilo partellus),Brumoides suturalis,"Predatory beetle for aphids & whiteflies (ecosystem support)"
