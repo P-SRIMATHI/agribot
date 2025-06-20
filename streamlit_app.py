@@ -1,32 +1,31 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import speech_recognition as sr
+import streamlit.components.v1 as components
 import base64
 
 # Load Dataset
 df = pd.read_csv("biocontrol_data.csv")
 
-# Background image (optional)
-def set_bg_from_local(image_file):
-    with open(image_file, "rb") as img_file:
-        encoded = base64.b64encode(img_file.read()).decode()
-    css = f"""
-    <style>
-    .stApp {{
-        background-image: url("data:image/jpg;base64,{encoded}");
-        background-size: cover;
-        background-attachment: fixed;
-        background-position: center;
-    }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
+# Optional background
+# def set_bg_from_local(image_file):
+#     with open(image_file, "rb") as img_file:
+#         encoded = base64.b64encode(img_file.read()).decode()
+#     css = f"""
+#     <style>
+#     .stApp {{
+#         background-image: url("data:image/jpg;base64,{encoded}");
+#         background-size: cover;
+#         background-attachment: fixed;
+#         background-position: center;
+#     }}
+#     </style>
+#     """
+#     st.markdown(css, unsafe_allow_html=True)
 
-# Uncomment if you want background
-# set_bg_from_local("agri_bg.jpg")
+# set_bg_from_local("agri_bg.jpg")  # Optional
 
-# Smart matching function
+# Match function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
@@ -35,86 +34,105 @@ def suggest_agent(crop, pest):
     if not match.empty:
         return match.iloc[0]['Biocontrol Agent'], match.iloc[0]['Usage Method']
     else:
-        return "No match found", "Try a different crop or pest."
+        return "No match found", "Try different inputs"
 
-# Voice recognizer
-def record_and_recognize():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.info("🎧 Listening... Speak clearly")
-        audio = r.listen(source, phrase_time_limit=4)
-        try:
-            text = r.recognize_google(audio)
-            st.success(f"✅ You said: `{text}`")
-            return text
-        except sr.UnknownValueError:
-            st.warning("❗ Couldn't understand, try again.")
-        except sr.RequestError:
-            st.error("❌ API error. Check internet.")
-    return ""
+# Streamlit layout
+st.set_page_config(page_title="AgriBot Voice", layout="wide")
 
-# Page config
-st.set_page_config(page_title="AgriBot - Smart Biocontrol", layout="wide")
-
-# 🌟 Welcome Header
+# Welcome
 st.markdown("""
-# 🌱 Welcome to **AgriBot**
-### Your Smart Organic Biocontrol Recommendation Assistant 🐞🧪  
-Speak or type your crop and pest — get an eco-friendly, data-backed solution 💚  
+# 🌾 AgriBot - Voice Powered Biocontrol Tool
+🎙 Use your voice to fill crop and pest info — then get eco-friendly agent suggestions!
 """)
 
-# Main 2-column layout
 left, right = st.columns([1.2, 1])
 
-# 👉 LEFT SIDE: Charts & Data
+# LEFT COLUMN: Charts + Data
 with left:
-    st.markdown("## 📊 Pest & Biocontrol Analytics")
+    st.markdown("## 📊 Pest & Agent Analytics")
 
-    if st.checkbox("📌 Show Pest Frequency (Bar Chart)"):
+    if st.checkbox("Bar Chart of Pests"):
         pest_counts = df['Pest'].value_counts()
         st.bar_chart(pest_counts)
 
-    if st.checkbox("🧬 Show Agent Usage (Pie Chart)"):
+    if st.checkbox("Pie Chart of Agent Usage"):
         agent_counts = df['Biocontrol Agent'].value_counts()
         fig, ax = plt.subplots()
-        agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
+        agent_counts.plot(kind='pie', autopct='%1.1f%%', ax=ax)
         ax.set_ylabel("")
         st.pyplot(fig)
 
-    with st.expander("📂 View Dataset"):
+    with st.expander("📁 View Dataset"):
         st.dataframe(df)
 
-# 👉 RIGHT SIDE: Suggestion UI
+# RIGHT COLUMN: Input + Voice Capture
 with right:
-    st.markdown("## 📝 Get Biocontrol Suggestion")
+    st.markdown("## 🧠 Suggestion Area")
 
-    # Text inputs with session state
-    crop = st.text_input("🌿 Enter Crop (e.g., Maize)", key="crop_input")
-    pest = st.text_input("🐛 Enter Pest (e.g., Stem Borer)", key="pest_input")
+    # JS Component: Browser Voice to Text
+    st.markdown("### 🎤 Record Using Your Voice")
 
-    st.markdown("### 🎙️ Or Use Voice Input")
+    record_html = """
+    <script>
+    var streamlitCropInput = window.streamlitCropInput || "";
+    var streamlitPestInput = window.streamlitPestInput || "";
 
-    if st.button("🎤 Record for Crop"):
-        text = record_and_recognize()
-        if text:
-            st.session_state.crop_input = text
+    function recordSpeech(id) {
+        var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-IN';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-    if st.button("🎤 Record for Pest"):
-        text = record_and_recognize()
-        if text:
-            st.session_state.pest_input = text
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            const input = document.getElementById(id);
+            input.value = transcript;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        };
 
-    if st.button("🔍 Suggest Biocontrol Agent"):
+        recognition.start();
+    }
+    </script>
+
+    <label>🌿 Crop</label><br>
+    <input type="text" id="crop_input" oninput="window.streamlitCropInput = this.value" style="width: 80%; padding: 6px;">
+    <button onclick="recordSpeech('crop_input')">🎙 Speak</button>
+    <br><br>
+
+    <label>🐛 Pest</label><br>
+    <input type="text" id="pest_input" oninput="window.streamlitPestInput = this.value" style="width: 80%; padding: 6px;">
+    <button onclick="recordSpeech('pest_input')">🎙 Speak</button>
+
+    <script>
+    // Send values to Streamlit
+    const observer = new MutationObserver(() => {
+        window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:setComponentValue",
+            value: {
+                crop: window.streamlitCropInput,
+                pest: window.streamlitPestInput
+            }
+        }, "*");
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    """
+
+    components.html(record_html, height=250)
+
+    # Get data from JS
+    crop = st.text_input("✅ Crop (from mic or type)", key="crop")
+    pest = st.text_input("✅ Pest (from mic or type)", key="pest")
+
+    if st.button("🔍 Get Suggestion"):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
-            st.success(f"✅ Biocontrol Agent: {agent}")
-            st.info(f"📌 Usage Instructions: {usage}")
+            st.success(f"✅ Agent: {agent}")
+            st.info(f"📌 Usage: {usage}")
         else:
-            st.warning("❗ No match found. Try different inputs.")
+            st.warning("❗ No match. Try again.")
 
 # Footer
-st.markdown("""
----
-🧪 Data: ICAR IPM for Maize | 👩‍🔬 Project by Srima | 🎤 Voice-enabled AgriBot  
-🧠 Powered by Python + Streamlit + SpeechRecognition  
-""")
+st.markdown("---")
+st.markdown("🎤 Voice Input via Web Speech API | 💚 Built by Srima | 🌿 Powered by Streamlit + JavaScript")
