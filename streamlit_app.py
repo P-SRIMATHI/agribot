@@ -67,13 +67,16 @@ with left:
 with right:
     st.markdown("## 🎤 Type or Speak (Mic-friendly Inputs)")
 
+    # Prepare placeholders to hold results
+    result_placeholder = st.empty()
+
     # Initialize session_state
     if "crop_value" not in st.session_state:
         st.session_state.crop_value = ""
     if "pest_value" not in st.session_state:
         st.session_state.pest_value = ""
 
-    # 🎙️ HTML + Mic + Typing Inputs
+    # HTML for voice + type inputs
     voice_input_html = f"""
     <script>
     function recordSpeech(id, targetKey) {{
@@ -109,21 +112,23 @@ with right:
     <button onclick="recordSpeech('pest_input', 'pest_value')">🎙 Speak</button>
     """
 
+    # Render the mic+typing HTML
     components.html(voice_input_html, height=320)
 
-    # Read values
+    # Get current input values
     crop = st.session_state.crop_value
     pest = st.session_state.pest_value
 
-    # ✅ Clean "Get Suggestion" button right below inputs
-    st.markdown("### 🔍 Get Suggestion")
-    if st.button("Get Suggestion", use_container_width=True):
+    # Button and result inside the same column, right below inputs
+    if st.button("🔍 Get Suggestion", key="suggest_button", use_container_width=True):
         agent, usage = suggest_agent(crop, pest)
-        if agent != "No match found":
-            st.success(f"✅ Biocontrol Agent: {agent}")
-            st.info(f"📌 Usage: {usage}")
-        else:
-            st.warning("❗ No match found. Try different keywords.")
+        with result_placeholder:
+            if agent != "No match found":
+                st.success(f"✅ Biocontrol Agent: {agent}")
+                st.info(f"📌 Usage: {usage}")
+            else:
+                st.warning("❗ No match found. Try different keywords.")
+
 
 
 
