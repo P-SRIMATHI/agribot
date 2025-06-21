@@ -70,44 +70,52 @@ with left:
 with right:
     st.markdown("## 🎤 Type or Speak (Mic-friendly Inputs)")
 
-    # HTML with mic buttons
-    voice_input_html = """
+    # Create empty inputs in session state
+    if "crop_value" not in st.session_state:
+        st.session_state.crop_value = ""
+    if "pest_value" not in st.session_state:
+        st.session_state.pest_value = ""
+
+    # HTML + JS mic input (binds to hidden JS that updates Streamlit)
+    voice_input_html = f"""
     <script>
-    function recordSpeech(id) {
+    function recordSpeech(id, targetKey) {{
         var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'en-IN';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
-        recognition.onresult = function(event) {
+        recognition.onresult = function(event) {{
             const transcript = event.results[0][0].transcript;
             document.getElementById(id).value = transcript;
-            document.getElementById(id).dispatchEvent(new Event('input', { bubbles: true }));
-        };
 
-        recognition.onerror = function(event) {
+            // Send value to Streamlit via postMessage
+            window.parent.postMessage({{ type: 'streamlit:setComponentValue', key: targetKey, value: transcript }}, '*');
+        }};
+
+        recognition.onerror = function(event) {{
             alert('Speech recognition error: ' + event.error);
-        };
+        }};
 
         recognition.start();
-    }
+    }}
     </script>
 
     <label>🌿 Crop</label><br>
-    <input type="text" id="crop_input" name="crop_input" style="width: 80%; padding: 6px;" />
-    <button onclick="recordSpeech('crop_input')">🎙 Speak</button><br><br>
+    <input type="text" id="crop_input" value="{st.session_state.crop_value}" oninput="window.parent.postMessage({{ type: 'streamlit:setComponentValue', key: 'crop_value', value: this.value }}, '*');" style="width: 80%; padding: 6px;" />
+    <button onclick="recordSpeech('crop_input', 'crop_value')">🎙 Speak</button><br><br>
 
     <label>🐛 Pest</label><br>
-    <input type="text" id="pest_input" name="pest_input" style="width: 80%; padding: 6px;" />
-    <button onclick="recordSpeech('pest_input')">🎙 Speak</button>
+    <input type="text" id="pest_input" value="{st.session_state.pest_value}" oninput="window.parent.postMessage({{ type: 'streamlit:setComponentValue', key: 'pest_value', value: this.value }}, '*');" style="width: 80%; padding: 6px;" />
+    <button onclick="recordSpeech('pest_input', 'pest_value')">🎙 Speak</button>
     """
 
-    # Load the HTML input fields (visible)
+    # Display HTML fields
     components.html(voice_input_html, height=300)
 
-    # 🫥 Hidden Streamlit fields to capture values (won't show on UI)
-    crop = st.text_input("", key="crop_input", label_visibility="collapsed")
-    pest = st.text_input("", key="pest_input", label_visibility="collapsed")
+    # Now just use session state values — no extra inputs
+    crop = st.session_state.crop_value
+    pest = st.session_state.pest_value
 
     if st.button("🔍 Get Suggestion"):
         agent, usage = suggest_agent(crop, pest)
@@ -116,6 +124,7 @@ with right:
             st.info(f"📌 Usage: {usage}")
         else:
             st.warning("❗ No match found. Try different keywords.")
+
 
 
 # Footer
