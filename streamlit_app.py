@@ -26,16 +26,31 @@ def set_bg_from_local(image_file):
 # ✅ Enable background
 set_bg_from_local("agri_bg.jpg")
 
-# Suggestion function
+#Suggestion function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
-    match = df[df['Crop'].str.lower() == crop]
-    match = match[match['Pest'].str.lower().str.contains(pest)]
+
+    # Clean the dataframe
+    df_clean = df.copy()
+    df_clean['Crop'] = df_clean['Crop'].str.lower().str.strip()
+    df_clean['Pest'] = df_clean['Pest'].str.lower().str.strip()
+
+    # Exact crop match
+    match_crop = df_clean[df_clean['Crop'] == crop]
+
+    # Partial pest match
+    match = match_crop[match_crop['Pest'].str.contains(pest, na=False)]
+
     if not match.empty:
         return match.iloc[0]['Biocontrol Agent'], match.iloc[0]['Usage Method']
+    elif not match_crop.empty:
+        # Pest not found, but crop found — suggest similar pests
+        possible_pests = match_crop['Pest'].unique().tolist()
+        return "No match found", f"Try one of these pests for {crop}: {', '.join(possible_pests)}"
     else:
         return "No match found", "Try different crop or pest."
+
 
 # Page setup
 st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
