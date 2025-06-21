@@ -16,12 +16,12 @@ def set_bg_from_local(image_file):
         encoded = base64.b64encode(img_file.read()).decode()
     css = f"""
     <style>
-    .stApp {{
-        background-image: url("data:image/jpg;base64,{encoded}");
-        background-size: cover;
-        background-attachment: fixed;
-        background-position: center;
-    }}
+        .stApp {{
+            background-image: url('data:image/jpg;base64,{encoded}');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -63,29 +63,23 @@ texts = {
     }
 }
 
-# ✅ Load language texts
 txt = texts[lang]
 
 # ✅ Heading and subheading shown BELOW toggle
 st.markdown(f"# {txt['title']}")
 st.markdown(txt['desc'])
 
-
-
 # Matching function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
-
     df_clean = df.copy()
     df_clean['Crop'] = df_clean['Crop'].astype(str).str.lower().str.strip()
     df_clean['Pest'] = df_clean['Pest'].astype(str).str.lower().str.strip()
 
     crop_matches = df_clean[df_clean['Crop'] == crop]
-
     if crop_matches.empty:
         return "No match found", f"Crop '{crop}' not found in data."
-
     pest_matches = crop_matches[crop_matches['Pest'].str.contains(pest, na=False, case=False)]
 
     if pest_matches.empty:
@@ -101,10 +95,8 @@ left, right = st.columns([1.2, 1])
 # LEFT: Charts
 with left:
     st.markdown("## 📊 Data Insights")
-
     if st.checkbox("📌 Pest Frequency - Bar Chart"):
         st.bar_chart(df['Pest'].value_counts())
-
     if st.checkbox("🧬 Agent Usage - Pie Chart"):
         agent_counts = df['Biocontrol Agent'].value_counts()
         fig, ax = plt.subplots()
@@ -115,11 +107,10 @@ with left:
 # RIGHT: Input + Voice
 with right:
     st.markdown("## 🎤")
-
     crop = st.text_input(txt["crop"], key="crop_input")
     pest = st.text_input(txt["pest"], key="pest_input")
-
     st.markdown(txt["mic_note"])
+
     mic_html = f"""
     <script>
     function recordSpeech(field) {{
@@ -127,7 +118,6 @@ with right:
         recognition.lang = '{'ta-IN' if lang == "தமிழ்" else 'en-IN'}';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-
         recognition.onresult = function(event) {{
             const transcript = event.results[0][0].transcript;
             const inputs = window.parent.document.querySelectorAll('input[data-baseweb="input"]');
@@ -138,11 +128,9 @@ with right:
                 }}
             }}
         }};
-
         recognition.onerror = function(event) {{
             alert('Speech recognition error: ' + event.error);
         }};
-
         recognition.start();
     }}
     </script>
@@ -160,7 +148,4 @@ with right:
             st.warning(f"{txt['no_match']} - {usage}")
 
 # Footer
-st.markdown(f"""
----
-{txt['footer']}
-""")
+st.markdown(f"---\n{txt['footer']}")
