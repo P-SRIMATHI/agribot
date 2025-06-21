@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import base64
 import matplotlib.pyplot as plt
 import streamlit.components.v1 as components
+import base64
 
 # Load CSV
 df = pd.read_csv("biocontrol_data.csv")
 
-# Set background
+# Background image setup
 def set_bg_from_local(image_file):
     with open(image_file, "rb") as img_file:
         encoded = base64.b64encode(img_file.read()).decode()
@@ -23,25 +23,36 @@ def set_bg_from_local(image_file):
     """
     st.markdown(css, unsafe_allow_html=True)
 
+# Set background
 set_bg_from_local("agri_bg.jpg")
 
-# Fix crop/pest matching
+# 💡 FINAL fixed function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
-    df_clean = df.copy()
-    df_clean['Crop'] = df_clean['Crop'].str.lower().str.strip()
-    df_clean['Pest'] = df_clean['Pest'].str.lower().str.strip()
-    match_crop = df_clean[df_clean['Crop'] == crop]
-    match = match_crop[match_crop['Pest'].str.contains(pest, na=False)]
-    if not match.empty:
-        return match.iloc[0]['Biocontrol Agent'], match.iloc[0]['Usage Method']
-    elif not match_crop.empty:
-        return "No match found", f"Try one of these pests: {', '.join(match_crop['Pest'].unique())}"
-    else:
-        return "No match found", "Try different crop or pest."
 
-# Page settings
+    # Clean the dataframe
+    df_clean = df.copy()
+    df_clean['Crop'] = df_clean['Crop'].astype(str).str.lower().str.strip()
+    df_clean['Pest'] = df_clean['Pest'].astype(str).str.lower().str.strip()
+
+    # Filter by crop
+    crop_matches = df_clean[df_clean['Crop'] == crop]
+
+    if crop_matches.empty:
+        return "No match found", f"Crop '{crop}' not found in data."
+
+    # Filter pest using partial match (str.contains)
+    pest_matches = crop_matches[crop_matches['Pest'].str.contains(pest, na=False, case=False)]
+
+    if pest_matches.empty:
+        possible = crop_matches['Pest'].unique().tolist()
+        return "No match found", f"Try one of these pests: {', '.join(possible)}"
+    else:
+        row = pest_matches.iloc[0]
+        return row['Biocontrol Agent'], row['Usage Method']
+
+# Page setup
 st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
 
 # Header
@@ -50,14 +61,16 @@ st.markdown("""
 🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚  
 """)
 
-# Layout
+# Layout: 2 columns
 left, right = st.columns([1.2, 1])
 
-# Left side: charts
+# 📊 LEFT: Charts
 with left:
     st.markdown("## 📊 Data Insights")
+
     if st.checkbox("📌 Pest Frequency - Bar Chart"):
         st.bar_chart(df['Pest'].value_counts())
+
     if st.checkbox("🧬 Agent Usage - Pie Chart"):
         agent_counts = df['Biocontrol Agent'].value_counts()
         fig, ax = plt.subplots()
@@ -65,40 +78,48 @@ with left:
         ax.set_ylabel("")
         st.pyplot(fig)
 
-# Right side: inputs + mic + suggestion
+# 🎙️ RIGHT: Inputs + Mic + Suggestion
 with right:
     st.markdown("## 🎤 Type or Speak Inputs")
 
-    # Real Streamlit inputs — tightly bind to session state
+    # Native text inputs
     crop = st.text_input("🌿 Crop", key="crop_input")
     pest = st.text_input("🐛 Pest", key="pest_input")
 
-    # Mic buttons update the above fields
-    components.html("""
+    # Mic buttons - INLINE, no float
+    st.markdown("#### 🎙 Click to speak")
+    mic_html = """
     <script>
-    function recordSpeech(fieldId){
-        const recog = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recog.lang = 'en-IN';
-        recog.interimResults = false;
-        recog.maxAlternatives = 1;
-        recog.onresult = function(e){
-            const result = e.results[0][0].transcript;
-            const inputBox = window.parent.document.querySelectorAll('input[data-baseweb="input"]');
-            for (let i = 0; i < inputBox.length; i++) {
-                if (inputBox[i].id.includes(fieldId)) {
-                    inputBox[i].value = result;
-                    inputBox[i].dispatchEvent(new Event('input', { bubbles: true }));
+    function recordSpeech(field) {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-IN';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            const inputs = window.parent.document.querySelectorAll('input[data-baseweb="input"]');
+            for (let i = 0; i < inputs.length; i++) {
+                if (inputs[i].id.includes(field)) {
+                    inputs[i].value = transcript;
+                    inputs[i].dispatchEvent(new Event('input', { bubbles: true }));
                 }
             }
         };
-        recog.start();
+
+        recognition.onerror = function(event) {
+            alert('Speech recognition error: ' + event.error);
+        };
+
+        recognition.start();
     }
     </script>
     <button onclick="recordSpeech('crop_input')">🎙 Speak Crop</button>
     <button onclick="recordSpeech('pest_input')">🎙 Speak Pest</button>
-    """, height=100)
+    """
+    components.html(mic_html, height=100)
 
-    # Suggestion button right under inputs
+    # Suggestion button right below inputs
     if st.button("🔍 Get Suggestion", use_container_width=True):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
