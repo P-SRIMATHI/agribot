@@ -28,11 +28,7 @@ set_bg_from_local("agri_bg.jpg")
 # Set page config
 st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
 
-# TEMPORARY default title in English before lang toggle
-st.markdown("## 🌾 AgriBot - Voice Based Biocontrol Assistant")
-st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
-
-# 🌐 THEN language toggle comes
+# 🌐 Language toggle FIRST (NO HEADING YET!)
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
 # Language dictionary
@@ -67,11 +63,13 @@ texts = {
     }
 }
 
+# ✅ Apply selected language
 txt = texts[lang]
 
-# ✅ Now update heading + subheading according to selected language
+# ✅ Show heading/subheading ONLY ONCE and AFTER toggle
 st.markdown(f"# {txt['title']}")
 st.markdown(txt['desc'])
+
 
 # Matching function
 def suggest_agent(crop, pest):
