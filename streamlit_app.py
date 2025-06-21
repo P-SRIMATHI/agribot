@@ -28,14 +28,10 @@ set_bg_from_local("agri_bg.jpg")
 # Set page config
 st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
 
-# STEP 1: Default English title shown first
-st.markdown("## 🌾 AgriBot - Voice Based Biocontrol Assistant")
-st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
-
-# STEP 2: Language toggle shown AFTER the heading
+# 🌐 Language toggle first
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
-# STEP 3: Language packs
+# Language dictionary
 texts = {
     "English": {
         "title": "🌾 AgriBot - Voice Based Biocontrol Assistant",
@@ -66,6 +62,16 @@ texts = {
         "footer": "📊 உருவாக்கியவர் Srima 💚 | 🎙 குரல் வழி Web Speech API | 🧪 Python மற்றும் Streamlit மூலம் இயக்கப்படுகிறது"
     }
 }
+
+# Get selected language text pack
+txt = texts[lang]
+
+# ✅ Show heading and subheading only once — based on selected language
+st.markdown(f"# {txt['title']}")
+st.markdown(txt['desc'])
+
+
+ 
 
 txt = texts[lang]
 
