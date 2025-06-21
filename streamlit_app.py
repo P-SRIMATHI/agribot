@@ -67,13 +67,13 @@ with left:
 with right:
     st.markdown("## 🎤 Type or Speak (Mic-friendly Inputs)")
 
-    # Initialize session_state for values
+    # Initialize session_state
     if "crop_value" not in st.session_state:
         st.session_state.crop_value = ""
     if "pest_value" not in st.session_state:
         st.session_state.pest_value = ""
 
-    # Voice + input HTML section
+    # 🎙️ HTML + Mic + Typing Inputs
     voice_input_html = f"""
     <script>
     function recordSpeech(id, targetKey) {{
@@ -106,15 +106,25 @@ with right:
     <input type="text" id="pest_input" value="{st.session_state.pest_value}" 
            oninput="window.parent.postMessage({{ type: 'streamlit:setComponentValue', key: 'pest_value', value: this.value }}, '*');"
            style="width: 80%; padding: 6px;" />
-    <button onclick="recordSpeech('pest_input', 'pest_value')">🎙 Speak</button><br><br>
+    <button onclick="recordSpeech('pest_input', 'pest_value')">🎙 Speak</button>
     """
 
-    # Render the 2 input boxes
-    components.html(voice_input_html, height=350)
+    components.html(voice_input_html, height=320)
 
-    # Pull values from session state
+    # Read values
     crop = st.session_state.crop_value
     pest = st.session_state.pest_value
+
+    # ✅ Clean "Get Suggestion" button right below inputs
+    st.markdown("### 🔍 Get Suggestion")
+    if st.button("Get Suggestion", use_container_width=True):
+        agent, usage = suggest_agent(crop, pest)
+        if agent != "No match found":
+            st.success(f"✅ Biocontrol Agent: {agent}")
+            st.info(f"📌 Usage: {usage}")
+        else:
+            st.warning("❗ No match found. Try different keywords.")
+
 
 
 # Footer
