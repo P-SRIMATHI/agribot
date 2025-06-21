@@ -7,7 +7,10 @@ import base64
 # Load data
 df = pd.read_csv("biocontrol_data.csv")
 
-# Set background image
+# ✅ Set page config
+st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
+
+# ✅ Set background image
 def set_bg_from_local(image_file):
     with open(image_file, "rb") as img_file:
         encoded = base64.b64encode(img_file.read()).decode()
@@ -25,13 +28,10 @@ def set_bg_from_local(image_file):
 
 set_bg_from_local("agri_bg.jpg")
 
-# Set page config
-st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
-
-# 🌐 Language toggle FIRST (NO HEADING YET!)
+# ✅ Language toggle FIRST
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
-# Language dictionary
+# ✅ Language dictionary
 texts = {
     "English": {
         "title": "🌾 AgriBot - Voice Based Biocontrol Assistant",
@@ -63,12 +63,13 @@ texts = {
     }
 }
 
-# ✅ Apply selected language
+# ✅ Load language texts
 txt = texts[lang]
 
-# ✅ Show heading/subheading ONLY ONCE and AFTER toggle
+# ✅ Heading and subheading shown BELOW toggle
 st.markdown(f"# {txt['title']}")
 st.markdown(txt['desc'])
+
 
 
 # Matching function
