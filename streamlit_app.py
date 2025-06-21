@@ -154,7 +154,7 @@ st.markdown(f"---\\n{txt['footer']}")
 '''
 
 file_path = "/mnt/data/streamlit_app.py"
-with open(file_path, "w", encoding="utf-8") as file:
+with open(file_path, encoding="utf-8") as file:
     file.write(code_fixed)
 
 file_path
