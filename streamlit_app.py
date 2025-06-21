@@ -70,7 +70,7 @@ with left:
 with right:
     st.markdown("## 🎤 Type or Speak (Mic-friendly Inputs)")
 
-    # HTML + JS mic input + linked text boxes
+    # HTML with mic buttons
     voice_input_html = """
     <script>
     function recordSpeech(id) {
@@ -102,11 +102,12 @@ with right:
     <button onclick="recordSpeech('pest_input')">🎙 Speak</button>
     """
 
+    # Load the HTML input fields (visible)
     components.html(voice_input_html, height=300)
 
-    # Now use synced input boxes
-    crop = st.text_input("✅ Crop", key="crop_input")
-    pest = st.text_input("✅ Pest", key="pest_input")
+    # 🫥 Hidden Streamlit fields to capture values (won't show on UI)
+    crop = st.text_input("", key="crop_input", label_visibility="collapsed")
+    pest = st.text_input("", key="pest_input", label_visibility="collapsed")
 
     if st.button("🔍 Get Suggestion"):
         agent, usage = suggest_agent(crop, pest)
@@ -115,6 +116,7 @@ with right:
             st.info(f"📌 Usage: {usage}")
         else:
             st.warning("❗ No match found. Try different keywords.")
+
 
 # Footer
 st.markdown("""
