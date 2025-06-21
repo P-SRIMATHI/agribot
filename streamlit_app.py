@@ -116,16 +116,6 @@ with right:
     crop = st.session_state.crop_value
     pest = st.session_state.pest_value
 
-    # ✅ Button now appears right after inputs
-    st.markdown("### 🔍 Get Suggestion")
-    if st.button("Get Suggestion", use_container_width=True):
-        agent, usage = suggest_agent(crop, pest)
-        if agent != "No match found":
-            st.success(f"✅ Biocontrol Agent: {agent}")
-            st.info(f"📌 Usage: {usage}")
-        else:
-            st.warning("❗ No match found. Try different keywords.")
-
 
 # Footer
 st.markdown("""
