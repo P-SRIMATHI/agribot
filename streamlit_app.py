@@ -7,7 +7,7 @@ import base64
 # Load data
 df = pd.read_csv("biocontrol_data.csv")
 
-# Background image setup (optional)
+# 🌄 Set background image
 def set_bg_from_local(image_file):
     with open(image_file, "rb") as img_file:
         encoded = base64.b64encode(img_file.read()).decode()
@@ -23,8 +23,8 @@ def set_bg_from_local(image_file):
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# Uncomment this if you want a background image
-# set_bg_from_local("agri_bg.jpg")
+# ✅ Set the background image
+set_bg_from_local("agri_bg.jpg")  # Make sure this file exists in the same folder
 
 # Suggestion function
 def suggest_agent(crop, pest):
@@ -66,16 +66,13 @@ with left:
     with st.expander("📂 View Dataset"):
         st.dataframe(df)
 
-# 🎙️ RIGHT: Input + Voice
+# 🎙️ RIGHT: Input (with voice + typing in single boxes)
 with right:
-    st.markdown("## 🎤 Voice-Based Input (Mic-friendly)")
+    st.markdown("## 🎤 Type or Speak (Mic-friendly Inputs)")
 
-    # HTML + JS voice input
-    record_html = """
+    # HTML + JS mic input + linked text boxes
+    voice_input_html = """
     <script>
-    var cropBox = null;
-    var pestBox = null;
-
     function recordSpeech(id) {
         var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'en-IN';
@@ -97,19 +94,19 @@ with right:
     </script>
 
     <label>🌿 Crop</label><br>
-    <input type="text" id="crop_input" style="width: 80%; padding: 6px;" />
+    <input type="text" id="crop_input" name="crop_input" style="width: 80%; padding: 6px;" />
     <button onclick="recordSpeech('crop_input')">🎙 Speak</button><br><br>
 
     <label>🐛 Pest</label><br>
-    <input type="text" id="pest_input" style="width: 80%; padding: 6px;" />
+    <input type="text" id="pest_input" name="pest_input" style="width: 80%; padding: 6px;" />
     <button onclick="recordSpeech('pest_input')">🎙 Speak</button>
     """
 
-    components.html(record_html, height=250)
+    components.html(voice_input_html, height=300)
 
-    # Streamlit input boxes
-    crop = st.text_input("✅ Crop (from mic or type)", key="crop")
-    pest = st.text_input("✅ Pest (from mic or type)", key="pest")
+    # Now use synced input boxes
+    crop = st.text_input("✅ Crop", key="crop_input")
+    pest = st.text_input("✅ Pest", key="pest_input")
 
     if st.button("🔍 Get Suggestion"):
         agent, usage = suggest_agent(crop, pest)
