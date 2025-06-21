@@ -63,25 +63,14 @@ texts = {
     }
 }
 
-# Select the current language pack
+# Select language text
 txt = texts[lang]
 
-# ✅ Heading & subheading only ONCE — right after selecting language
+# ✅ Show heading + description only once
 st.markdown(f"# {txt['title']}")
 st.markdown(txt['desc'])
 
-txt = texts[lang]
-
-# STEP 4: Show the translated heading & description again after language is selected
-st.markdown(f"# {txt['title']}")
-st.markdown(txt['desc'])
-
-
- 
-
-txt = texts[lang]
-
-# Final matching function
+# Matching function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
     pest = pest.lower().strip()
@@ -104,15 +93,10 @@ def suggest_agent(crop, pest):
         row = pest_matches.iloc[0]
         return row['Biocontrol Agent'], row['Usage Method']
 
-# Page title
-st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
-st.markdown(f"# {txt['title']}")
-st.markdown(txt['desc'])
-
 # Layout
 left, right = st.columns([1.2, 1])
 
-# Charts
+# LEFT: Charts
 with left:
     st.markdown("## 📊 Data Insights")
 
@@ -126,7 +110,7 @@ with left:
         ax.set_ylabel("")
         st.pyplot(fig)
 
-# Inputs + Voice
+# RIGHT: Input + Voice
 with right:
     st.markdown("## 🎤")
 
@@ -165,7 +149,6 @@ with right:
     """
     components.html(mic_html, height=100)
 
-    # Suggestion Button + Output
     if st.button(txt["get_suggestion"], use_container_width=True):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
