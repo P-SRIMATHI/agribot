@@ -1,5 +1,5 @@
-# Fixing indentation issue and rewriting the final working version of streamlit_app.py
-code_fixed = '''
+# Writing the final working version of streamlit_app.py to the sandbox so user can download it
+code = """
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ st.set_page_config(page_title="AgriBot - Voice Based", layout="wide")
 def set_bg_from_local(image_file):
     with open(image_file, "rb") as img_file:
         encoded = base64.b64encode(img_file.read()).decode()
-    css = f\"\"\"
+    css = f"""
     <style>
         .stApp {{
             background-image: url('data:image/jpg;base64,{encoded}');
@@ -25,7 +25,7 @@ def set_bg_from_local(image_file):
             background-position: center;
         }}
     </style>
-    \"\"\"
+    """
     st.markdown(css, unsafe_allow_html=True)
 
 set_bg_from_local("agri_bg.jpg")
@@ -151,10 +151,10 @@ with right:
 
 # Footer
 st.markdown(f"---\\n{txt['footer']}")
-'''
+"""
 
-file_path = "/mnt/data/streamlit_app.py"
-with open(file_path, encoding="utf-8") as file:
-    file.write(code_fixed)
+path = "/mnt/data/streamlit_app.py"
+with open(path, "w", encoding="utf-8") as file:
+    file.write(code)
 
-file_path
+path
