@@ -28,7 +28,11 @@ def set_bg_from_local(image_file):
 
 set_bg_from_local("agri_bg.jpg")
 
-# ✅ Language toggle FIRST
+# 🪧 Static English title & description shown first
+st.markdown("# 🌾 AgriBot - Voice Based Biocontrol Assistant")
+st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
+
+# ✅ Language toggle placed AFTER title
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
 # ✅ Language dictionary
@@ -64,10 +68,6 @@ texts = {
 }
 
 txt = texts[lang]
-
-# ✅ Heading and subheading shown BELOW toggle
-st.markdown(f"# {txt['title']}")
-st.markdown(txt['desc'])
 
 # Matching function
 def suggest_agent(crop, pest):
@@ -149,4 +149,3 @@ with right:
 
 # Footer
 st.markdown(f"---\n{txt['footer']}")
-
