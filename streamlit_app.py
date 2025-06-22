@@ -128,8 +128,18 @@ with left:
 # RIGHT: Input + Voice
 with right:
     st.markdown("## 🎤 Speak or Type your crop and pest")
-    crop = st.text_input(txt["crop"], key="crop_input")
-    pest = st.text_input(txt["pest"], key="pest_input")
+    crop = st.text_input(txt["crop"], key="crop_input", placeholder="Type or pick crop")
+crop_filtered = [c for c in df['Crop'].unique().tolist() if crop.lower() in c.lower()]
+
+if crop_filtered:
+    crop = st.selectbox("✅ Suggested Crops", crop_filtered, index=0)
+
+pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type or pick pest")
+pest_filtered = [p for p in df['Pest'].unique().tolist() if pest.lower() in p.lower()]
+
+if pest_filtered:
+    pest = st.selectbox("✅ Suggested Pests", pest_filtered, index=0)
+
     st.markdown(txt["mic_note"])
 
     mic_html = f"""
