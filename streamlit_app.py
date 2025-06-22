@@ -149,8 +149,4 @@ with right:
 
 # Footer
 st.markdown(f"---\n{txt['footer']}")
-'''
 
-# Save file
-path = "/mnt/data/streamlit_app.py"
-path
