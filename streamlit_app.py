@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit.components.v1 as components
 import base64
-import altair as alt  # ⬅️ Move here at the top
+import altair as alt
 
 # Load data
 df = pd.read_csv("biocontrol_data.csv")
@@ -42,7 +42,7 @@ st.markdown("""
 st.markdown("# 🌾 AgriBot - Voice Based Biocontrol Assistant")
 st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
 
-# ✅ Language toggle placed AFTER title
+# ✅ Language toggle
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
 # ✅ Language dictionary
@@ -128,17 +128,16 @@ with left:
 # RIGHT: Input + Voice
 with right:
     st.markdown("## 🎤 Speak or Type your crop and pest")
+
     crop = st.text_input(txt["crop"], key="crop_input", placeholder="Type or pick crop")
-crop_filtered = [c for c in df['Crop'].unique().tolist() if crop.lower() in c.lower()]
+    crop_filtered = [c for c in df['Crop'].unique().tolist() if crop.lower() in c.lower()]
+    if crop_filtered:
+        crop = st.selectbox("✅ Suggested Crops", crop_filtered, index=0)
 
-if crop_filtered:
-    crop = st.selectbox("✅ Suggested Crops", crop_filtered, index=0)
-
-pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type or pick pest")
-pest_filtered = [p for p in df['Pest'].unique().tolist() if pest.lower() in p.lower()]
-
-if pest_filtered:
-    pest = st.selectbox("✅ Suggested Pests", pest_filtered, index=0)
+    pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type or pick pest")
+    pest_filtered = [p for p in df['Pest'].unique().tolist() if pest.lower() in p.lower()]
+    if pest_filtered:
+        pest = st.selectbox("✅ Suggested Pests", pest_filtered, index=0)
 
     st.markdown(txt["mic_note"])
 
