@@ -1,5 +1,3 @@
-# Re-run after code execution environment reset
-final_code = '''
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -155,7 +153,4 @@ st.markdown(f"---\n{txt['footer']}")
 
 # Save file
 path = "/mnt/data/streamlit_app.py"
-with open(path, "w", encoding="utf-8") as file:
-    file.write(final_code)
-
 path
