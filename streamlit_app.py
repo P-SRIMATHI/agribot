@@ -106,7 +106,7 @@ with left:
 
 # RIGHT: Input + Voice
 with right:
-    st.markdown("## 🎤")
+    st.markdown("## 🎤 Enter your crop and pest")
     crop = st.text_input(txt["crop"], key="crop_input")
     pest = st.text_input(txt["pest"], key="pest_input")
     st.markdown(txt["mic_note"])
