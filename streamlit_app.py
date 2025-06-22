@@ -129,18 +129,23 @@ with left:
 with right:
     st.markdown("## 🎤 Speak or Type your crop and pest")
 
-    crop = st.text_input(txt["crop"], key="crop_input", placeholder="Type or pick crop")
-    crop_filtered = [c for c in df['Crop'].unique().tolist() if crop.lower() in c.lower()]
-    if crop_filtered:
-        crop = st.selectbox("✅ Suggested Crops", crop_filtered, index=0)
+    # 🎯 Crop input with suggestions
+    crop_options = df['Crop'].dropna().unique().tolist()
+    crop = st.text_input(txt["crop"], key="crop_input", placeholder="Type your crop")
+    crop_matches = [c for c in crop_options if crop.lower() in c.lower()]
+    if crop_matches:
+        crop = st.selectbox("✅ Did you mean?", crop_matches, key="crop_select")
 
-    pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type or pick pest")
-    pest_filtered = [p for p in df['Pest'].unique().tolist() if pest.lower() in p.lower()]
-    if pest_filtered:
-        pest = st.selectbox("✅ Suggested Pests", pest_filtered, index=0)
+    # 🎯 Pest input with suggestions
+    pest_options = df['Pest'].dropna().unique().tolist()
+    pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type your pest")
+    pest_matches = [p for p in pest_options if pest.lower() in p.lower()]
+    if pest_matches:
+        pest = st.selectbox("✅ Did you mean?", pest_matches, key="pest_select")
 
     st.markdown(txt["mic_note"])
 
+    # 🎙️ Voice buttons
     mic_html = f"""
     <script>
     function recordSpeech(field) {{
@@ -169,6 +174,7 @@ with right:
     """
     components.html(mic_html, height=100)
 
+    # 🔍 Get Suggestion button
     if st.button(txt["get_suggestion"], use_container_width=True):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
@@ -176,6 +182,7 @@ with right:
             st.info(f"{txt['usage']}: {usage}")
         else:
             st.warning(f"{txt['no_match']} - {usage}")
+
 
 # Footer
 st.markdown(f"---\n{txt['footer']}")
