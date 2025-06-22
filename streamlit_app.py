@@ -1,5 +1,3 @@
-# Writing the final working version of streamlit_app.py to the sandbox so user can download it
-code = """
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
