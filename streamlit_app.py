@@ -29,6 +29,15 @@ def set_bg_from_local(image_file):
 
 set_bg_from_local("agri_bg.jpg")
 
+# ✅ Remove top padding/margin
+st.markdown("""
+    <style>
+    .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # 🪧 Static English title & description shown first
 st.markdown("# 🌾 AgriBot - Voice Based Biocontrol Assistant")
 st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
