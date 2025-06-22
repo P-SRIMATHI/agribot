@@ -108,13 +108,12 @@ bar_chart = alt.Chart(bar_data).mark_bar(size=20).encode(
     height=300
 )
 st.altair_chart(bar_chart, use_container_width=False)
-
-    if st.checkbox("🧬 Agent Usage - Pie Chart"):
-        agent_counts = df['Biocontrol Agent'].value_counts()
-        fig, ax = plt.subplots(figsize=(4, 4))  # ⬅️ size reduced here
-agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
-ax.set_ylabel("")
-st.pyplot(fig)
+if st.checkbox("🧬 Agent Usage - Pie Chart"):
+    agent_counts = df['Biocontrol Agent'].value_counts()
+    fig, ax = plt.subplots(figsize=(4, 4))  # ⬅️ size reduced here
+    agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
+    ax.set_ylabel("")
+    st.pyplot(fig)
 
 # RIGHT: Input + Voice
 with right:
