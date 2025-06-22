@@ -129,23 +129,23 @@ with left:
 with right:
     st.markdown("## 🎤 Speak or Type your crop and pest")
 
-    # 🎯 Crop input with suggestions
-    crop_options = df['Crop'].dropna().unique().tolist()
-    crop = st.text_input(txt["crop"], key="crop_input", placeholder="Type your crop")
-    crop_matches = [c for c in crop_options if crop.lower() in c.lower()]
-    if crop_matches:
-        crop = st.selectbox("✅ Did you mean?", crop_matches, key="crop_select")
+    # ✅ Crop suggestions in one field
+    crop = st.selectbox(
+        txt["crop"],
+        options=sorted(df['Crop'].dropna().unique().tolist()),
+        placeholder="Type or select a crop"
+    )
 
-    # 🎯 Pest input with suggestions
-    pest_options = df['Pest'].dropna().unique().tolist()
-    pest = st.text_input(txt["pest"], key="pest_input", placeholder="Type your pest")
-    pest_matches = [p for p in pest_options if pest.lower() in p.lower()]
-    if pest_matches:
-        pest = st.selectbox("✅ Did you mean?", pest_matches, key="pest_select")
+    # ✅ Pest suggestions in one field
+    pest = st.selectbox(
+        txt["pest"],
+        options=sorted(df['Pest'].dropna().unique().tolist()),
+        placeholder="Type or select a pest"
+    )
 
     st.markdown(txt["mic_note"])
 
-    # 🎙️ Voice buttons
+    # 🎙 Voice buttons
     mic_html = f"""
     <script>
     function recordSpeech(field) {{
@@ -155,11 +155,11 @@ with right:
         recognition.maxAlternatives = 1;
         recognition.onresult = function(event) {{
             const transcript = event.results[0][0].transcript;
-            const inputs = window.parent.document.querySelectorAll('input[data-baseweb="input"]');
-            for (let i = 0; i < inputs.length; i++) {{
-                if (inputs[i].id.includes(field)) {{
-                    inputs[i].value = transcript;
-                    inputs[i].dispatchEvent(new Event('input', {{ bubbles: true }}));
+            const selects = window.parent.document.querySelectorAll('select');
+            for (let i = 0; i < selects.length; i++) {{
+                if (selects[i].ariaLabel.includes(field)) {{
+                    selects[i].value = transcript;
+                    selects[i].dispatchEvent(new Event('change', {{ bubbles: true }}));
                 }}
             }}
         }};
@@ -169,12 +169,12 @@ with right:
         recognition.start();
     }}
     </script>
-    <button onclick="recordSpeech('crop_input')">{txt["speak_crop"]}</button>
-    <button onclick="recordSpeech('pest_input')">{txt["speak_pest"]}</button>
+    <button onclick="recordSpeech('{txt["crop"]}')">{txt["speak_crop"]}</button>
+    <button onclick="recordSpeech('{txt["pest"]}')">{txt["speak_pest"]}</button>
     """
     components.html(mic_html, height=100)
 
-    # 🔍 Get Suggestion button
+    # 🔍 Get Suggestion
     if st.button(txt["get_suggestion"], use_container_width=True):
         agent, usage = suggest_agent(crop, pest)
         if agent != "No match found":
@@ -182,6 +182,7 @@ with right:
             st.info(f"{txt['usage']}: {usage}")
         else:
             st.warning(f"{txt['no_match']} - {usage}")
+
 
 
 # Footer
