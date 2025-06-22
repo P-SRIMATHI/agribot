@@ -96,13 +96,25 @@ left, right = st.columns([1.2, 1])
 with left:
     st.markdown("## 📊 Data Insights")
     if st.checkbox("📌 Pest Frequency - Bar Chart"):
-        st.bar_chart(df['Pest'].value_counts())
+        import altair as alt  # ⬅️ Make sure this is at the top if not already
+
+bar_data = df['Pest'].value_counts().reset_index()
+bar_data.columns = ['Pest', 'Count']
+bar_chart = alt.Chart(bar_data).mark_bar(size=20).encode(
+    x=alt.X('Pest', sort='-y'),
+    y='Count'
+).properties(
+    width=400,
+    height=300
+)
+st.altair_chart(bar_chart, use_container_width=False)
+
     if st.checkbox("🧬 Agent Usage - Pie Chart"):
         agent_counts = df['Biocontrol Agent'].value_counts()
-        fig, ax = plt.subplots()
-        agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
-        ax.set_ylabel("")
-        st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(4, 4))  # ⬅️ size reduced here
+agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
+ax.set_ylabel("")
+st.pyplot(fig)
 
 # RIGHT: Input + Voice
 with right:
