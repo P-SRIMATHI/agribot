@@ -6,6 +6,10 @@ import base64
 import altair as alt
 from datetime import datetime
 import requests
+from PIL import Image
+import io
+import numpy as np
+import tensorflow as tf
 
 # Load data
 df = pd.read_csv("biocontrol_data.csv")
@@ -79,7 +83,6 @@ texts = {
     }
 }
 
-
 # Matching function
 def suggest_agent(crop, pest):
     crop = crop.lower().strip()
@@ -109,7 +112,6 @@ def get_weather():
         country = res.get("country_name")
         lat, lon = res.get("latitude"), res.get("longitude")
 
-        weather_key = "7df16b3736msh6ab2c9620d3e8b9p1df10ajsnc689a2c1a182"  # demo key
         url = f"https://api.weatherapi.com/v1/current.json?key=YOUR_WEATHERAPI_KEY&q={lat},{lon}"
         weather = requests.get(url).json()
 
@@ -118,6 +120,25 @@ def get_weather():
         return None, None, None, None, None
 
 city, region, country, temp, condition = get_weather()
+
+# 🖼️ Image recognition
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model("pest_disease_model.h5")
+    return model
+
+model = load_model()
+
+class_names = ['healthy', 'stem borer', 'leaf blight', 'aphids']  # Update as per your trained model classes
+
+def predict_image(image):
+    img = image.resize((224, 224))
+    img_array = np.array(img) / 255.0
+    img_array = img_array.reshape((1, 224, 224, 3))
+    prediction = model.predict(img_array)
+    predicted_class = class_names[np.argmax(prediction)]
+    confidence = np.max(prediction)
+    return predicted_class, confidence
 
 # Layout
 def main_ui():
@@ -146,17 +167,11 @@ def main_ui():
         st.markdown("## 🎤 Speak or Type your crop and pest")
         crop_input = st.text_input("Crop")
         crop_suggestions = [c for c in df['Crop'].unique().tolist() if crop_input.lower() in c.lower()]
-        if crop_suggestions:
-            crop = st.selectbox("✅ Suggested Crops", crop_suggestions)
-        else:
-            crop = crop_input
+        crop = st.selectbox("✅ Suggested Crops", crop_suggestions) if crop_suggestions else crop_input
 
         pest_input = st.text_input("Pest")
         pest_suggestions = [p for p in df['Pest'].unique().tolist() if pest_input.lower() in p.lower()]
-        if pest_suggestions:
-            pest = st.selectbox("✅ Suggested Pests", pest_suggestions)
-        else:
-            pest = pest_input
+        pest = st.selectbox("✅ Suggested Pests", pest_suggestions) if pest_suggestions else pest_input
 
         if st.button("🔍 Get Suggestion"):
             agent, usage = suggest_agent(crop, pest)
@@ -165,6 +180,15 @@ def main_ui():
                 st.info(f"📌 Usage: {usage}")
             else:
                 st.warning(f"❗ {usage}")
+
+        st.markdown("---")
+        st.markdown("### 📷 Upload Crop Leaf Image")
+        uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+        if uploaded_image:
+            image = Image.open(uploaded_image)
+            st.image(image, caption="Uploaded Image", use_column_width=True)
+            predicted_class, confidence = predict_image(image)
+            st.success(f"Predicted: {predicted_class} ({confidence * 100:.2f}% confidence)")
 
     # 🌦️ Real-time weather section
     st.markdown("---")
