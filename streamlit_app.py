@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import streamlit.components.v1 as components
 import base64
 import altair as alt
+from datetime import datetime
+import requests
 
 # Load data
 df = pd.read_csv("biocontrol_data.csv")
@@ -42,7 +44,7 @@ st.markdown("""
 st.markdown("# 🌾 AgriBot - Voice Based Biocontrol Assistant")
 st.markdown("🎙️ Speak or type the crop and pest to get eco-friendly suggestions 💚")
 
-# ✅ Language toggle
+# ✅ Language toggle placed AFTER title
 lang = st.radio("🌐 Language / மொழி", ["English", "தமிழ்"], horizontal=True)
 
 # ✅ Language dictionary
@@ -77,7 +79,6 @@ texts = {
     }
 }
 
-txt = texts[lang]
 
 # Matching function
 def suggest_agent(crop, pest):
@@ -99,91 +100,82 @@ def suggest_agent(crop, pest):
         row = pest_matches.iloc[0]
         return row['Biocontrol Agent'], row['Usage Method']
 
+# 📍 Get current location using IP (for weather and regional data)
+def get_weather():
+    try:
+        res = requests.get("https://ipapi.co/json/").json()
+        city = res.get("city")
+        region = res.get("region")
+        country = res.get("country_name")
+        lat, lon = res.get("latitude"), res.get("longitude")
+
+        weather_key = "7df16b3736msh6ab2c9620d3e8b9p1df10ajsnc689a2c1a182"  # demo key
+        url = f"https://api.weatherapi.com/v1/current.json?key=YOUR_WEATHERAPI_KEY&q={lat},{lon}"
+        weather = requests.get(url).json()
+
+        return city, region, country, weather['current']['temp_c'], weather['current']['condition']['text']
+    except:
+        return None, None, None, None, None
+
+city, region, country, temp, condition = get_weather()
+
 # Layout
-left, right = st.columns([1.2, 1])
+def main_ui():
+    left, right = st.columns([1.2, 1])
 
-# LEFT: Charts
-with left:
-    st.markdown("## 📊 Data Insights")
+    with left:
+        st.markdown("## 📊 Data Insights")
 
-    if st.checkbox("📌 Pest Frequency - Bar Chart"):
-        bar_data = df['Pest'].value_counts().reset_index()
-        bar_data.columns = ['Pest', 'Count']
-        bar_chart = alt.Chart(bar_data).mark_bar(size=20).encode(
-            x=alt.X('Pest', sort='-y'),
-            y='Count'
-        ).properties(
-            width=400,
-            height=300
-        )
-        st.altair_chart(bar_chart, use_container_width=False)
+        if st.checkbox("📌 Pest Frequency - Bar Chart"):
+            bar_data = df['Pest'].value_counts().reset_index()
+            bar_data.columns = ['Pest', 'Count']
+            bar_chart = alt.Chart(bar_data).mark_bar(size=20).encode(
+                x=alt.X('Pest', sort='-y'),
+                y='Count'
+            ).properties(width=400, height=300)
+            st.altair_chart(bar_chart, use_container_width=False)
 
-    if st.checkbox("🧬 Agent Usage - Pie Chart"):
-        agent_counts = df['Biocontrol Agent'].value_counts()
-        fig, ax = plt.subplots(figsize=(4, 4))
-        agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
-        ax.set_ylabel("")
-        st.pyplot(fig)
+        if st.checkbox("🧬 Agent Usage - Pie Chart"):
+            agent_counts = df['Biocontrol Agent'].value_counts()
+            fig, ax = plt.subplots(figsize=(4, 4))
+            agent_counts.plot(kind='pie', autopct='%1.1f%%', startangle=90, ax=ax)
+            ax.set_ylabel("")
+            st.pyplot(fig)
 
-# RIGHT: Input + Voice
-with right:
-    st.markdown("## 🎤 Speak or Type your crop and pest")
-
-    # ✅ Crop suggestions in one field
-    crop = st.selectbox(
-        txt["crop"],
-        options=sorted(df['Crop'].dropna().unique().tolist()),
-        placeholder="Type or select a crop"
-    )
-
-    # ✅ Pest suggestions in one field
-    pest = st.selectbox(
-        txt["pest"],
-        options=sorted(df['Pest'].dropna().unique().tolist()),
-        placeholder="Type or select a pest"
-    )
-
-    st.markdown(txt["mic_note"])
-
-    # 🎙 Voice buttons
-    mic_html = f"""
-    <script>
-    function recordSpeech(field) {{
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = '{'ta-IN' if lang == "தமிழ்" else 'en-IN'}';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        recognition.onresult = function(event) {{
-            const transcript = event.results[0][0].transcript;
-            const selects = window.parent.document.querySelectorAll('select');
-            for (let i = 0; i < selects.length; i++) {{
-                if (selects[i].ariaLabel.includes(field)) {{
-                    selects[i].value = transcript;
-                    selects[i].dispatchEvent(new Event('change', {{ bubbles: true }}));
-                }}
-            }}
-        }};
-        recognition.onerror = function(event) {{
-            alert('Speech recognition error: ' + event.error);
-        }};
-        recognition.start();
-    }}
-    </script>
-    <button onclick="recordSpeech('{txt["crop"]}')">{txt["speak_crop"]}</button>
-    <button onclick="recordSpeech('{txt["pest"]}')">{txt["speak_pest"]}</button>
-    """
-    components.html(mic_html, height=100)
-
-    # 🔍 Get Suggestion
-    if st.button(txt["get_suggestion"], use_container_width=True):
-        agent, usage = suggest_agent(crop, pest)
-        if agent != "No match found":
-            st.success(f"{txt['agent']}: {agent}")
-            st.info(f"{txt['usage']}: {usage}")
+    with right:
+        st.markdown("## 🎤 Speak or Type your crop and pest")
+        crop_input = st.text_input("Crop")
+        crop_suggestions = [c for c in df['Crop'].unique().tolist() if crop_input.lower() in c.lower()]
+        if crop_suggestions:
+            crop = st.selectbox("✅ Suggested Crops", crop_suggestions)
         else:
-            st.warning(f"{txt['no_match']} - {usage}")
+            crop = crop_input
 
+        pest_input = st.text_input("Pest")
+        pest_suggestions = [p for p in df['Pest'].unique().tolist() if pest_input.lower() in p.lower()]
+        if pest_suggestions:
+            pest = st.selectbox("✅ Suggested Pests", pest_suggestions)
+        else:
+            pest = pest_input
 
+        if st.button("🔍 Get Suggestion"):
+            agent, usage = suggest_agent(crop, pest)
+            if agent != "No match found":
+                st.success(f"✅ Biocontrol Agent: {agent}")
+                st.info(f"📌 Usage: {usage}")
+            else:
+                st.warning(f"❗ {usage}")
 
-# Footer
-st.markdown(f"---\n{txt['footer']}")
+    # 🌦️ Real-time weather section
+    st.markdown("---")
+    st.markdown("### 🌦️ Weather & Region Info")
+    if city:
+        st.info(f"📍 Location: {city}, {region}, {country}\n🌡️ Temp: {temp}°C | 🌤️ Condition: {condition}")
+    else:
+        st.warning("Couldn't fetch your regional weather info.")
+
+    # 📎 Footer
+    st.markdown("---")
+    st.markdown("📊 Built by Srima 💚 | 🎙 Voice via Web Speech API | 🧪 Powered by Python & Streamlit")
+
+main_ui()
