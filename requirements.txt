@@ -1,3 +1,6 @@
-streamlit
-pandas
-matplotlib
+streamlit==1.35.0
+pandas==2.2.2
+matplotlib==3.8.4
+altair==5.3.0
+requests==2.31.0
+geocoder==1.38.1
