@@ -1,66 +1,80 @@
 import streamlit as st
-import requests
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
-# ---------------- CONFIG ----------------
-st.set_page_config(page_title="AgriBot: NanoBioTwin", layout="wide")
+# Title and intro
+st.set_page_config(page_title="AgriBot: Digital Crop Twin", layout="wide")
+st.title("🌾 AgriBot: Digital Twin for Crop Yield Simulation")
+st.markdown("📊 This tool uses real historical data to simulate and forecast crop yields based on region, year, and crop type.")
 
-# 🌱 Title
-st.title("🌿 AgriBot: NanoBioTwin")
-st.markdown("##### A Real-Time Digital Twin for Crop + Nanomaterial Simulation")
+# Load the dataset
+@st.cache_data
+def load_data():
+    df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
+    return df
 
-st.divider()
+data = load_data()
 
-#INPUT 
+# Preview
+if st.checkbox("Show Raw Data"):
+    st.dataframe(data)
 
-# Load real crop yield dataset
-df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
+# Select Inputs
+crops = data["Crop"].unique()
+states = data["State"].unique()
+years = sorted(data["Year"].unique())
 
-# Show dataset preview
-st.subheader("📋 Historical Crop Yield Dataset")
-st.dataframe(df.head())
+col1, col2, col3 = st.columns(3)
+with col1:
+    selected_crop = st.selectbox("Select Crop", crops)
+with col2:
+    selected_state = st.selectbox("Select State", states)
+with col3:
+    selected_year = st.selectbox("Select Year", years)
 
-# ---------------- WEATHER DATA ----------------
-API_KEY = "750cf7197bfe592beab29c3d93303d1b"
+# Filter data
+filtered_data = data[(data["Crop"] == selected_crop) & 
+                     (data["State"] == selected_state)]
 
-def get_weather_data(city):
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return {
-            "temperature": data["main"]["temp"],
-            "humidity": data["main"]["humidity"],
-            "rainfall": data.get("rain", {}).get("1h", 0.0),
-            "weather": data["weather"][0]["description"],
-            "wind_speed": data["wind"]["speed"]
-        }
-    return None
+# Visualization
+st.subheader(f"📈 Yield Trend for {selected_crop} in {selected_state}")
+fig, ax = plt.subplots()
+sns.lineplot(data=filtered_data, x="Year", y="Yield", marker="o", ax=ax)
+plt.xlabel("Year")
+plt.ylabel("Yield (kg/ha)")
+plt.grid(True)
+st.pyplot(fig)
 
-# ---------------- SIMULATION ----------------
-if st.button("🌦️ Run Simulation with Live Weather"):
-    weather = get_weather_data(location)
+# Forecasting
+st.subheader("🔮 Forecast Future Yield (Linear Regression)")
 
-    if weather:
-        st.success(f"🌍 Real-Time Weather for **{location.title()}**")
-        st.write(weather)
+# Prepare data for prediction
+X = filtered_data["Year"].values.reshape(-1, 1)
+y = filtered_data["Yield"].values
+model = LinearRegression()
+model.fit(X, y)
 
-        # 🔬 Basic effectiveness formula
-        score = 100
-        score -= abs(pH - 6.5) * 5
-        score -= abs(weather['temperature'] - 28) * 2
-        score += {
-            "Nano Urea": 10,
-            "ZnO Nanoparticles": 7,
-            "Nano Silica": 5,
-            "TiO2 Nano Pesticide": 3
-        }.get(nanomaterial, 0)
+future_years = np.arange(years[-1] + 1, years[-1] + 6).reshape(-1, 1)
+future_preds = model.predict(future_years)
 
-        score = max(min(score, 100), 0)
+forecast_df = pd.DataFrame({
+    "Year": future_years.flatten(),
+    "Predicted Yield": future_preds
+})
 
-        # 📊 Result
-        st.markdown("### 🧪 Predicted Nano Effectiveness Score")
-        st.metric("📈 Expected Yield Impact", f"{score:.2f} / 100")
+st.write(f"📌 Predicted Yield for next 5 years for {selected_crop} in {selected_state}:")
+st.dataframe(forecast_df)
 
-    else:
-        st.error("⚠️ Could not fetch weather. Check city name or API key.")
+fig2, ax2 = plt.subplots()
+sns.lineplot(x=filtered_data["Year"], y=filtered_data["Yield"], label="Historical", marker="o", ax=ax2)
+sns.lineplot(x=forecast_df["Year"], y=forecast_df["Predicted Yield"], label="Forecast", marker="o", ax=ax2)
+plt.xlabel("Year")
+plt.ylabel("Yield")
+plt.legend()
+plt.grid(True)
+st.pyplot(fig2)
+
+st.success("✅ Simulation complete using real dataset!")
