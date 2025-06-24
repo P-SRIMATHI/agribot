@@ -1,5 +1,13 @@
 import streamlit as st
 import requests
+import pandas as pd
+# Load real crop yield dataset
+df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
+
+# Show dataset preview
+st.subheader("📋 Historical Crop Yield Dataset")
+st.dataframe(df.head())
+
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="AgriBot: NanoBioTwin", layout="wide")
@@ -9,20 +17,6 @@ st.title("🌿 AgriBot: NanoBioTwin")
 st.markdown("##### A Real-Time Digital Twin for Crop + Nanomaterial Simulation")
 
 st.divider()
-
-# ---------------- INPUT FIELDS ----------------
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    crop = st.selectbox("🌾 Select Crop", ["Maize", "Rice", "Wheat", "Tomato", "Cotton"])
-with col2:
-    nanomaterial = st.selectbox("🧪 Select Nanomaterial", ["Nano Urea", "ZnO Nanoparticles", "Nano Silica", "TiO2 Nano Pesticide"])
-with col3:
-    soil_type = st.selectbox("🧱 Select Soil Type", ["Sandy", "Loamy", "Clay", "Silty", "Peaty", "Saline"])
-
-pH = st.slider("🔬 Soil pH", 3.0, 10.0, 6.5)
-moisture = st.slider("💧 Soil Moisture (%)", 0, 100, 40)
-location = st.text_input("📍 Enter Your Location (City)", "Chennai")
 
 # ---------------- WEATHER DATA ----------------
 API_KEY = "750cf7197bfe592beab29c3d93303d1b"
