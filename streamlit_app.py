@@ -1,13 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-# Load real crop yield dataset
-df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
-
-# Show dataset preview
-st.subheader("📋 Historical Crop Yield Dataset")
-st.dataframe(df.head())
-
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="AgriBot: NanoBioTwin", layout="wide")
@@ -17,6 +10,15 @@ st.title("🌿 AgriBot: NanoBioTwin")
 st.markdown("##### A Real-Time Digital Twin for Crop + Nanomaterial Simulation")
 
 st.divider()
+
+#INPUT 
+
+# Load real crop yield dataset
+df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
+
+# Show dataset preview
+st.subheader("📋 Historical Crop Yield Dataset")
+st.dataframe(df.head())
 
 # ---------------- WEATHER DATA ----------------
 API_KEY = "750cf7197bfe592beab29c3d93303d1b"
