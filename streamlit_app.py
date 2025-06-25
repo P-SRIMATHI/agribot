@@ -46,6 +46,9 @@ try:
     df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
     df.dropna(inplace=True)
 
+    # Add fertilizer column by combining N, P, K
+    df["Total_Fertilizer_kg"] = df["Total_N_kg"] + df["Total_P_kg"] + df["Total_K_kg"]
+
     available_columns = df.columns.tolist()
 
     def find_matching_column(possible_names):
@@ -54,11 +57,11 @@ try:
                 return name
         return None
 
-    rainfall_col = find_matching_column(['Rainfall (mm)', 'rainfall', 'Rainfall'])
-    fertilizer_col = find_matching_column(['Fertilizer Used (kg/ha)', 'Fertilizer', 'fertilizer'])
-    temperature_col = find_matching_column(['Avg Temperature (°C)', 'Temperature', 'temperature'])
-    target_col = find_matching_column(['Yield (kg/ha)', 'yield', 'Yield'])
-    crop_col = find_matching_column(['Crop', 'crop'])
+    rainfall_col = find_matching_column(['Rainfall_mm'])
+    fertilizer_col = "Total_Fertilizer_kg"
+    temperature_col = find_matching_column(['Temperature_C'])
+    target_col = find_matching_column(['Yield_kg_per_ha'])
+    crop_col = find_matching_column(['Crop'])
 
     if None in [rainfall_col, fertilizer_col, temperature_col, target_col, crop_col]:
         st.error("🚫 Required columns not found in the dataset. Available: " + ", ".join(available_columns))
@@ -110,7 +113,7 @@ try:
             st.write(f"🌬️ Wind Speed: {weather['Wind_Speed']} m/s")
 
         rainfall = st.number_input("Rainfall (mm)", min_value=0.0, value=100.0)
-        fertilizer = st.number_input("Fertilizer Used (kg/ha)", min_value=0.0, value=50.0)
+        fertilizer = st.number_input("Total Fertilizer Used (kg/ha)", min_value=0.0, value=50.0)
         temp = weather['Temperature'] if weather else st.number_input("Avg Temperature (°C)", min_value=0.0, value=25.0)
         crop_encoded = df[df[crop_col] == selected_crop]['Crop_encoded'].iloc[0]
 
