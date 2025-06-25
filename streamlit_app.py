@@ -41,10 +41,10 @@ try:
                 return name
         return None
 
-    rainfall_col = find_matching_column(['Rainfall (mm)', 'rainfall', 'Rainfall'])
-    fertilizer_col = find_matching_column(['Fertilizer Used (kg/ha)', 'Fertilizer', 'fertilizer'])
-    temperature_col = find_matching_column(['Avg Temperature (°C)', 'Temperature', 'temperature'])
-    target_col = find_matching_column(['Yield (kg/ha)', 'yield', 'Yield'])
+    rainfall_col = "Rainfall_mm"
+    fertilizer_col = "Total_N_kg"
+    temperature_col = "Temperature_C"
+    target_col = "Yield_kg_per_ha"
 
     if None in [rainfall_col, fertilizer_col, temperature_col, target_col]:
         st.error("🚫 Required columns not found in the dataset. Available: " + ", ".join(available_columns))
