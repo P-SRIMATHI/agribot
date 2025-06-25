@@ -29,16 +29,11 @@ set_bg_image("agri_bg.jpg")
 try:
     df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
     df.dropna(inplace=True)
-    
-    # Show available columns to avoid KeyError
+
     available_columns = df.columns.tolist()
 
-    # Match column names flexibly
-    feature_candidates = {
-        'Rainfall': ['Rainfall (mm)', 'rainfall', 'Rainfall'],
-        'Fertilizer': ['Fertilizer Used (kg/ha)', 'Fertilizer', 'fertilizer'],
-        'Temperature': ['Avg Temperature (°C)', 'Temperature', 'temperature']
-    }
+    # Debug: show columns for transparency
+    # st.write("Available Columns:", available_columns)
 
     def find_matching_column(possible_names):
         for name in possible_names:
@@ -46,13 +41,13 @@ try:
                 return name
         return None
 
-    rainfall_col = find_matching_column(feature_candidates['Rainfall'])
-    fertilizer_col = find_matching_column(feature_candidates['Fertilizer'])
-    temperature_col = find_matching_column(feature_candidates['Temperature'])
-    target_col = 'Yield (kg/ha)' if 'Yield (kg/ha)' in available_columns else available_columns[-1]  # fallback
+    rainfall_col = find_matching_column(['Rainfall (mm)', 'rainfall', 'Rainfall'])
+    fertilizer_col = find_matching_column(['Fertilizer Used (kg/ha)', 'Fertilizer', 'fertilizer'])
+    temperature_col = find_matching_column(['Avg Temperature (°C)', 'Temperature', 'temperature'])
+    target_col = find_matching_column(['Yield (kg/ha)', 'yield', 'Yield'])
 
-    if None in [rainfall_col, fertilizer_col, temperature_col]:
-        st.error("🚫 Required columns not found in the dataset.")
+    if None in [rainfall_col, fertilizer_col, temperature_col, target_col]:
+        st.error("🚫 Required columns not found in the dataset. Available: " + ", ".join(available_columns))
     else:
         features = [rainfall_col, fertilizer_col, temperature_col]
         X = df[features]
