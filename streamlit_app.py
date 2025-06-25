@@ -29,12 +29,6 @@ set_bg_image("agri_bg.jpg")
 # Load dataset
 df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
 
-# Display basic dataset info
-st.title("🌾 Smart Crop Yield Predictor")
-st.write("This app uses real historical crop data to predict crop yield based on minimal user input.")
-st.subheader("Dataset Preview")
-st.dataframe(df.head())
-
 # Drop missing values for simplicity
 df.dropna(inplace=True)
 
@@ -56,6 +50,9 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 r2 = r2_score(y_test, y_pred)
+
+st.title("🌾 Smart Crop Yield Predictor")
+st.write("This app uses real historical crop data to predict crop yield based on minimal user input.")
 
 st.subheader("Model Performance")
 st.write(f"✅ RMSE: {rmse:.2f}")
