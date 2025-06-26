@@ -126,10 +126,14 @@ try:
 
         col1, col2 = st.columns(2)
         with col1:
-            fig2, ax2 = plt.subplots(figsize=(4, 3))
-            sns.lineplot(data=crop_data, x='Year', y=target_col, ax=ax2)
-            ax2.set_title("Yield Over Years")
-            st.pyplot(fig2)
+            fig4, ax4 = plt.subplots(figsize=(3, 2))  # ✅ smaller figure size
+            sns.scatterplot(data=crop_data, x=fertilizer_col, y=target_col, ax=ax4, s=25)
+            ax4.set_title("Fertilizer Impact on Yield", fontsize=10)
+            ax4.set_xlabel(fertilizer_col, fontsize=8)
+            ax4.set_ylabel(target_col, fontsize=8)
+            plt.tight_layout()  # ✅ compress layout
+            st.pyplot(fig4)
+
 
         with col2:
             fig3, ax3 = plt.subplots(figsize=(4, 3))
