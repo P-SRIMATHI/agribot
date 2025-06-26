@@ -26,6 +26,7 @@ def set_bg_image(image_file):
 
 set_bg_image("agri_bg.jpg")
 
+# Weather API integration
 @st.cache_data
 def get_weather_data(city_name, api_key):
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
@@ -40,32 +41,26 @@ def get_weather_data(city_name, api_key):
     else:
         return None
 
+# Load dataset
 try:
     df = pd.read_csv("Custom_Crops_yield_Historical_Dataset.csv")
     df.dropna(inplace=True)
 
     available_columns = df.columns.tolist()
 
-    # Match columns with flexible names
-    def find_col(possible):
-        for p in possible:
-            if p in available_columns:
-                return p
-        return None
+    rainfall_col = "Rainfall_mm"
+    temperature_col = "Temperature_C"
+    fertilizer_col = "Total_N_kg"  # assuming NPK values are considered fertilizer inputs
+    target_col = "Yield_kg_per_ha"
+    crop_col = "Crop"
 
-    rainfall_col = find_col(['Rainfall_mm', 'Rainfall'])
-    temp_col = find_col(['Temperature_C', 'Temperature'])
-    fert_col = find_col(['Total_N_kg', 'Fertilizer Used (kg/ha)', 'Fertilizer'])
-    target_col = find_col(['Yield_kg_per_ha', 'yield'])
-    crop_col = find_col(['Crop', 'crop'])
-
-    if None in [rainfall_col, fert_col, temp_col, target_col, crop_col]:
-        st.error("🚫 Required columns not found in the dataset. Available: " + ", ".join(available_columns))
+    if None in [rainfall_col, fertilizer_col, temperature_col, target_col, crop_col]:
+        st.error("🚫 Required columns not found. Available: " + ", ".join(available_columns))
     else:
         df[crop_col] = df[crop_col].astype('category')
         df['Crop_encoded'] = df[crop_col].cat.codes
 
-        features = [rainfall_col, fert_col, temp_col, 'Crop_encoded']
+        features = [rainfall_col, fertilizer_col, temperature_col, 'Crop_encoded']
         X = df[features]
         y = df[target_col]
 
@@ -79,48 +74,57 @@ try:
         r2 = r2_score(y_test, y_pred)
 
         st.title("🌾 Smart Crop Yield Predictor")
-        st.write("This app uses real historical crop data and live weather inputs to predict crop yield.")
+        st.write("This app uses historical crop data + live weather to predict your yield accurately.")
 
-        st.subheader("📈 Model Performance")
+        st.subheader("📊 Model Performance")
         st.write(f"✅ RMSE: {rmse:.2f}")
         st.write(f"✅ R² Score: {r2:.2f}")
 
-        st.subheader("🔍 Feature Importance")
+        st.subheader("📌 Feature Importance")
+        importance_df = pd.DataFrame({
+            'Feature': features,
+            'Importance': model.feature_importances_
+        }).sort_values(by='Importance', ascending=False)
+
         fig1, ax1 = plt.subplots(figsize=(4, 3))
-        sns.barplot(x=model.feature_importances_, y=features, ax=ax1)
+        sns.barplot(x='Importance', y='Feature', data=importance_df, ax=ax1)
         st.pyplot(fig1)
 
-        st.subheader("📥 Input Your Data")
-        selected_crop = st.selectbox("🌱 Select Crop", df[crop_col].unique())
-        district = st.text_input("🏙️ Enter District or City for Weather", "Chennai")
+        st.subheader("🧮 Enter Values for Prediction")
+
+        selected_crop = st.selectbox("🌾 Choose Crop", df[crop_col].unique())
+        district = st.text_input("📍 District/City for Weather", value="Chennai")
 
         weather_api_key = st.secrets["weather_api_key"] if "weather_api_key" in st.secrets else "your_openweather_key_here"
         weather = get_weather_data(district, weather_api_key)
 
         if weather:
-            st.write(f"🌡️ Temp: {weather['Temperature']}°C | 💧 Humidity: {weather['Humidity']}% | 🌬️ Wind: {weather['Wind_Speed']} m/s")
+            st.success(f"🌡️ Temp: {weather['Temperature']} °C | 💧 Humidity: {weather['Humidity']}% | 🌬️ Wind: {weather['Wind_Speed']} m/s")
 
-        # Inputs (no + - buttons)
-        rainfall = st.number_input("🌧️ Rainfall (mm)", value=100.0, step=0.1, format="%.1f")
-        fertilizer = st.number_input("🧪 Fertilizer Used (kg/ha)", value=50.0, step=0.1, format="%.1f")
-        temp = weather['Temperature'] if weather else st.number_input("🌡️ Avg Temperature (°C)", value=25.0, step=0.1, format="%.1f")
+        try:
+            rainfall = float(st.text_input("🌧️ Rainfall (mm)", "100"))
+            fertilizer = float(st.text_input("🧪 Fertilizer Used (kg/ha)", "50"))
+            temp = weather['Temperature'] if weather else float(st.text_input("🌡️ Temperature (°C)", "25"))
+        except ValueError:
+            st.error("❗Please enter numeric values.")
+            st.stop()
+
         crop_encoded = df[df[crop_col] == selected_crop]['Crop_encoded'].iloc[0]
 
-        if st.button("🚀 Predict Yield"):
+        if st.button("🔍 Predict Yield"):
             user_input = pd.DataFrame({
                 rainfall_col: [rainfall],
-                fert_col: [fertilizer],
-                temp_col: [temp],
+                fertilizer_col: [fertilizer],
+                temperature_col: [temp],
                 'Crop_encoded': [crop_encoded]
             })
-            pred = model.predict(user_input)[0]
-            st.success(f"🌾 Estimated Yield: {pred:.2f} kg/ha for {selected_crop}")
+            prediction = model.predict(user_input)[0]
+            st.success(f"🌱 Estimated Yield for {selected_crop}: {prediction:.2f} kg/ha")
 
-        st.subheader("📊 Visual Trends")
-
+        st.subheader("📈 Trend Visualizations")
         crop_data = df[df[crop_col] == selected_crop]
-        col1, col2 = st.columns(2)
 
+        col1, col2 = st.columns(2)
         with col1:
             fig2, ax2 = plt.subplots(figsize=(4, 3))
             sns.lineplot(data=crop_data, x='Year', y=target_col, ax=ax2)
@@ -133,8 +137,8 @@ try:
             ax3.set_title("Rainfall vs Yield")
             st.pyplot(fig3)
 
-        fig4, ax4 = plt.subplots(figsize=(3, 2))  # Reduced size
-        sns.scatterplot(data=crop_data, x=fert_col, y=target_col, ax=ax4)
+        fig4, ax4 = plt.subplots(figsize=(3.5, 2.5))  # Reduced chart size
+        sns.scatterplot(data=crop_data, x=fertilizer_col, y=target_col, ax=ax4)
         ax4.set_title("Fertilizer Impact on Yield")
         st.pyplot(fig4)
 
